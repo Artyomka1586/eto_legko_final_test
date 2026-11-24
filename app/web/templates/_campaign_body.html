@@ -18,7 +18,9 @@
       {% if stream.redirect_url %}<span class="muted redirect-inline">→ <a href="{{ stream.redirect_url }}" target="_blank" rel="noopener">{{ stream.redirect_url }}</a></span>{% endif %}
     {% endif %}
     {% if stream.dirty %}<span class="badge badge-dirty">не опубликован</span>{% endif %}
-    <span class="muted open-hint">открыть →</span>
+    <a class="btn open-link" href="/campaigns/{{ campaign.keitaro_id }}/streams/{{ stream.id }}">
+      {{ "Перейти к офферам →" if stream.has_offers else "Открыть поток →" }}
+    </a>
   </header>
 </section>
 {% endfor %}
