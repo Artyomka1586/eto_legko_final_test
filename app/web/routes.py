@@ -99,8 +99,8 @@ def index(request: Request, db: Session = Depends(get_db), error: str | None = N
 
 @router.post("/campaigns")
 def create_campaign(
-    name: str = Form(...),
-    geo: str = Form(...),
+    name: str = Form(""),
+    geo: str = Form(""),
     offer_id: str = Form(""),
     db: Session = Depends(get_db),
 ):
@@ -164,7 +164,7 @@ def fetch_streams(
 def add_stream(
     keitaro_id: int,
     request: Request,
-    name: str = Form(...),
+    name: str = Form(""),
     kind: str = Form("offers"),
     url: str = Form(""),
     geo: str = Form(""),

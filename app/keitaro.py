@@ -76,4 +76,12 @@ class KeitaroClient:
 
 
 def get_client() -> KeitaroClient:
-    return KeitaroClient()
+    """Один клиент на процесс: httpx.Client держит пул соединений, плодить его на каждый
+    запрос нельзя (утечка до GC). httpx.Client потокобезопасен для запросов."""
+    global _shared_client
+    if _shared_client is None:
+        _shared_client = KeitaroClient()
+    return _shared_client
+
+
+_shared_client: KeitaroClient | None = None

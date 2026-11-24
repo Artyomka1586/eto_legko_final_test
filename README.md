@@ -64,6 +64,8 @@ pip install -r requirements.txt
 ```ini
 KEITARO_API_URL=https://keitaro-for-tests.etolegko.com/admin_api/v1
 KEITARO_API_TOKEN=<ваш ключ API>
+# необязательно: префикс имён кампаний (по умолчанию test_adulybin_)
+# CAMPAIGN_NAME_PREFIX=test_adulybin_
 ```
 
 Ключ берётся в админке эмулятора Keitaro после входа через GitHub (плашка

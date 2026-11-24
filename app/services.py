@@ -11,7 +11,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
-from app.keitaro import KeitaroClient
+from app.keitaro import KeitaroClient, KeitaroError, get_client
 from app.models import Campaign, Stream, StreamOffer
 
 GOOGLE_STREAM_NAME = "Google"
@@ -24,7 +24,7 @@ OFFERS_STREAM_NAME = "Offers"
 @lru_cache(maxsize=1)
 def offer_catalog() -> dict[int, str]:
     """Каталог офферов Keitaro. В эмуляторе каталог read-only, поэтому кэш безопасен."""
-    return {o["id"]: o["name"] for o in KeitaroClient().list_offers()}
+    return {o["id"]: o["name"] for o in get_client().list_offers()}
 
 
 # --- пересчёт весов --------------------------------------------------------
@@ -65,23 +65,31 @@ def create_campaign(db: Session, kt: KeitaroClient, name: str, geo: str, offer_i
         traffic_source_id=source["id"],
         domain_id=domain["id"],
     )
-    google_stream = kt.create_stream(
-        {
-            "campaign_id": campaign["id"],
-            "name": GOOGLE_STREAM_NAME,
-            "schema": "redirect",
-            "action_options": {"url": "https://www.google.com/"},
-            "filters": [{"name": "country", "mode": "accept", "payload": [geo.upper()]}],
-        }
-    )
-    offers_stream = kt.create_stream(
-        {
-            "campaign_id": campaign["id"],
-            "name": OFFERS_STREAM_NAME,
-            "schema": "landings",
-            "offers": [{"offer_id": offer_id, "share": 100}],
-        }
-    )
+    try:
+        google_stream = kt.create_stream(
+            {
+                "campaign_id": campaign["id"],
+                "name": GOOGLE_STREAM_NAME,
+                "schema": "redirect",
+                "action_options": {"url": "https://www.google.com/"},
+                "filters": [{"name": "country", "mode": "accept", "payload": [geo.upper()]}],
+            }
+        )
+        offers_stream = kt.create_stream(
+            {
+                "campaign_id": campaign["id"],
+                "name": OFFERS_STREAM_NAME,
+                "schema": "landings",
+                "offers": [{"offer_id": offer_id, "share": 100}],
+            }
+        )
+    except KeitaroError:
+        # Keitaro упал посреди создания — откатываем кампанию, чтобы не оставить её без потоков
+        try:
+            kt.delete_campaign(campaign["id"])
+        except KeitaroError:
+            pass
+        raise
 
     local = Campaign(keitaro_id=campaign["id"], name=full_name, geo=geo.upper())
     local.streams = [
