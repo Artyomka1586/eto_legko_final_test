@@ -49,24 +49,34 @@ def _get_or_create_campaign(db: Session, kt: KeitaroClient, keitaro_id: int) -> 
     return campaign
 
 
-def _action_response(
-    request: Request, db: Session, campaign: Campaign, message: str | None = None, error: str | None = None
-):
-    """HTMX-запросам отдаём тело редактора, обычным — редирект (PRG)."""
-    if request.headers.get("HX-Request") == "true":
-        return templates.TemplateResponse(
-            request,
-            "_editor_body.html",
-            {"request": request, "campaign": campaign, "message": message, "error": error},
-        )
-    return RedirectResponse(f"/campaigns/{campaign.keitaro_id}", status_code=303)
-
-
 def _get_stream(db: Session, campaign: Campaign, stream_id: int) -> Stream:
     stream = db.get(Stream, stream_id)
     if stream is None or stream.campaign_id != campaign.id:
         raise HTTPException(status_code=404, detail="Поток не найден")
     return stream
+
+
+def _campaign_response(request: Request, campaign: Campaign, message: str | None = None, error: str | None = None):
+    """HTMX-запросам отдаём тело страницы кампании, обычным — редирект (PRG)."""
+    if request.headers.get("HX-Request") == "true":
+        return templates.TemplateResponse(
+            request,
+            "_campaign_body.html",
+            {"request": request, "campaign": campaign, "message": message, "error": error},
+        )
+    return RedirectResponse(f"/campaigns/{campaign.keitaro_id}", status_code=303)
+
+
+def _stream_response(request: Request, stream: Stream, message: str | None = None, error: str | None = None):
+    """HTMX-запросам отдаём тело страницы потока, обычным — редирект (PRG)."""
+    campaign = stream.campaign
+    if request.headers.get("HX-Request") == "true":
+        return templates.TemplateResponse(
+            request,
+            "_stream_body.html",
+            {"request": request, "stream": stream, "message": message, "error": error},
+        )
+    return RedirectResponse(f"/campaigns/{campaign.keitaro_id}/streams/{stream.id}", status_code=303)
 
 
 # --- страницы ---------------------------------------------------------------
@@ -113,27 +123,65 @@ def create_campaign(
 
 
 @router.get("/campaigns/{keitaro_id}")
-def editor(request: Request, keitaro_id: int, db: Session = Depends(get_db)):
-    kt = get_client()
-    campaign = _get_or_create_campaign(db, kt, keitaro_id)
+def campaign_page(request: Request, keitaro_id: int, db: Session = Depends(get_db)):
+    campaign = _get_or_create_campaign(db, get_client(), keitaro_id)
     return templates.TemplateResponse(
-        request, "editor.html", {"request": request, "campaign": campaign}
+        request, "campaign.html", {"request": request, "campaign": campaign}
     )
 
 
-# --- действия редактора (HTMX) ----------------------------------------------
+@router.get("/campaigns/{keitaro_id}/streams/{stream_id}")
+def stream_page(request: Request, keitaro_id: int, stream_id: int, db: Session = Depends(get_db)):
+    campaign = _get_or_create_campaign(db, get_client(), keitaro_id)
+    stream = _get_stream(db, campaign, stream_id)
+    return templates.TemplateResponse(
+        request, "stream.html", {"request": request, "campaign": campaign, "stream": stream}
+    )
+
+
+# --- действия уровня кампании ----------------------------------------------
 
 
 @router.post("/campaigns/{keitaro_id}/fetch")
 def fetch_streams(keitaro_id: int, request: Request, db: Session = Depends(get_db)):
-    kt = get_client()
-    campaign = _get_or_create_campaign(db, kt, keitaro_id)
+    campaign = _get_or_create_campaign(db, get_client(), keitaro_id)
     try:
-        services.sync_campaign_streams(db, kt, campaign)
-        campaign = _get_or_create_campaign(db, kt, keitaro_id)
+        services.sync_campaign_streams(db, get_client(), campaign)
     except KeitaroError as exc:
-        return _action_response(request, db, campaign, error=f"Keitaro: {exc}")
-    return _action_response(request, db, campaign, message="Потоки синхронизированы с Keitaro")
+        return _campaign_response(request, campaign, error=f"Keitaro: {exc}")
+    return _campaign_response(request, campaign, message="Потоки синхронизированы с Keitaro")
+
+
+@router.post("/campaigns/{keitaro_id}/streams")
+def add_stream(
+    keitaro_id: int,
+    request: Request,
+    name: str = Form(...),
+    kind: str = Form("offers"),
+    url: str = Form(""),
+    geo: str = Form(""),
+    db: Session = Depends(get_db),
+):
+    campaign = _get_or_create_campaign(db, get_client(), keitaro_id)
+    name = name.strip()
+    url = url.strip()
+    geo = geo.strip().upper()
+    if not name:
+        return _campaign_response(request, campaign, error="Укажите название потока")
+    if kind not in ("offers", "redirect"):
+        return _campaign_response(request, campaign, error="Тип потока: офферный или редирект")
+    if kind == "redirect" and not url:
+        return _campaign_response(request, campaign, error="Для потока-редиректа укажите URL")
+    if geo and (len(geo) != 2 or not geo.isalpha()):
+        return _campaign_response(request, campaign, error="Гео-фильтр: две латинские буквы")
+    try:
+        services.add_stream(db, get_client(), campaign, name, kind, url, geo or None)
+    except KeitaroError as exc:
+        return _campaign_response(request, campaign, error=f"Keitaro: {exc}")
+    return _campaign_response(request, campaign, message=f"Поток «{name}» добавлен в Keitaro")
+
+
+# --- действия уровня потока -------------------------------------------------
 
 
 @router.post("/campaigns/{keitaro_id}/offers")
@@ -141,16 +189,16 @@ def add_offer(
     keitaro_id: int,
     request: Request,
     stream_id: int = Form(...),
-    offer_id: int = Form(...),
+    offer_id: int = Form(0),
     db: Session = Depends(get_db),
 ):
     campaign = _get_or_create_campaign(db, get_client(), keitaro_id)
     stream = _get_stream(db, campaign, stream_id)
     if offer_id <= 0 or offer_id not in services.offer_catalog():
-        return _action_response(request, db, campaign, error=f"Оффер {offer_id} не найден в Keitaro")
+        return _stream_response(request, stream, error=f"Оффер {offer_id} не найден в Keitaro")
     services.add_offer(db, stream, offer_id)
-    return _action_response(
-        request, db, campaign, message=f"Оффер {offer_id} добавлен (не опубликовано — нажмите Push)"
+    return _stream_response(
+        request, stream, message=f"Оффер {offer_id} добавлен (не опубликовано — нажмите Push)"
     )
 
 
@@ -159,9 +207,9 @@ def remove_offer(offer_row_id: int, request: Request, db: Session = Depends(get_
     offer = db.get(StreamOffer, offer_row_id)
     if offer is None:
         raise HTTPException(status_code=404, detail="Оффер не найден")
-    campaign = offer.stream.campaign
+    stream = offer.stream
     services.remove_offer(db, offer)
-    return _action_response(request, db, campaign, message="Оффер удалён (не опубликовано)")
+    return _stream_response(request, stream, message="Оффер удалён (не опубликовано)")
 
 
 @router.post("/offers/{offer_row_id}/restore")
@@ -169,9 +217,9 @@ def restore_offer(offer_row_id: int, request: Request, db: Session = Depends(get
     offer = db.get(StreamOffer, offer_row_id)
     if offer is None:
         raise HTTPException(status_code=404, detail="Оффер не найден")
-    campaign = offer.stream.campaign
+    stream = offer.stream
     services.restore_offer(db, offer)
-    return _action_response(request, db, campaign, message="Оффер возвращён (не опубликовано)")
+    return _stream_response(request, stream, message="Оффер возвращён (не опубликовано)")
 
 
 @router.post("/offers/{offer_row_id}/pin")
@@ -179,9 +227,9 @@ def toggle_pin(offer_row_id: int, request: Request, db: Session = Depends(get_db
     offer = db.get(StreamOffer, offer_row_id)
     if offer is None:
         raise HTTPException(status_code=404, detail="Оффер не найден")
-    campaign = offer.stream.campaign
+    stream = offer.stream
     services.toggle_pin(db, offer)
-    return _action_response(request, db, campaign)
+    return _stream_response(request, stream)
 
 
 @router.post("/streams/{stream_id}/push")
@@ -189,12 +237,11 @@ def push_stream(stream_id: int, request: Request, db: Session = Depends(get_db))
     stream = db.get(Stream, stream_id)
     if stream is None:
         raise HTTPException(status_code=404, detail="Поток не найден")
-    campaign = stream.campaign
     try:
         services.push_stream(db, get_client(), stream)
     except KeitaroError as exc:
-        return _action_response(request, db, campaign, error=f"Keitaro: {exc}")
-    return _action_response(request, db, campaign, message="Изменения опубликованы в Keitaro")
+        return _stream_response(request, stream, error=f"Keitaro: {exc}")
+    return _stream_response(request, stream, message="Изменения опубликованы в Keitaro")
 
 
 @router.post("/streams/{stream_id}/cancel")
@@ -202,9 +249,8 @@ def cancel_stream(stream_id: int, request: Request, db: Session = Depends(get_db
     stream = db.get(Stream, stream_id)
     if stream is None:
         raise HTTPException(status_code=404, detail="Поток не найден")
-    campaign = stream.campaign
     services.cancel_stream_changes(db, stream)
-    return _action_response(request, db, campaign, message="Несохранённые изменения отменены")
+    return _stream_response(request, stream, message="Несохранённые изменения отменены")
 
 
 # --- API для поиска офферов --------------------------------------------------

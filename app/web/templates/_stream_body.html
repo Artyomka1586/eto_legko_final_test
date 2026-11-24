@@ -1,12 +1,8 @@
-<div id="editor-body">
+{% set campaign_id = stream.campaign.keitaro_id %}
+<div id="stream-body-{{ stream.id }}">
 {% if error %}<div class="flash flash-error">{{ error }}</div>{% endif %}
 {% if message %}<div class="flash flash-ok">{{ message }}</div>{% endif %}
 
-{% if not campaign.streams %}
-<p class="muted">Потоков нет. Нажмите «Fetch Streams», чтобы подтянуть их из Keitaro.</p>
-{% endif %}
-
-{% for stream in campaign.streams %}
 <section class="stream-card{% if stream.dirty %} dirty{% endif %}">
   <header class="stream-head">
     <span class="stream-name">{{ stream.name }}</span>
@@ -17,10 +13,10 @@
       </span>
       {% if stream.dirty %}
       <span class="stream-actions">
-        <form hx-post="/streams/{{ stream.id }}/push" hx-target="#editor-body" hx-swap="outerHTML" class="inline">
+        <form hx-post="/streams/{{ stream.id }}/push" hx-target="#stream-body-{{ stream.id }}" hx-swap="outerHTML" class="inline">
           <button class="btn primary" type="submit">Push</button>
         </form>
-        <form hx-post="/streams/{{ stream.id }}/cancel" hx-target="#editor-body" hx-swap="outerHTML" class="inline">
+        <form hx-post="/streams/{{ stream.id }}/cancel" hx-target="#stream-body-{{ stream.id }}" hx-swap="outerHTML" class="inline">
           <button class="btn" type="submit">Cancel</button>
         </form>
       </span>
@@ -48,7 +44,7 @@
       </td>
       <td class="share-cell">
         <span class="share-value">{{ offer.share }}%</span>
-        <form hx-post="/offers/{{ offer.id }}/pin" hx-target="#editor-body" hx-swap="outerHTML" class="inline">
+        <form hx-post="/offers/{{ offer.id }}/pin" hx-target="#stream-body-{{ stream.id }}" hx-swap="outerHTML" class="inline">
           <button class="pin{% if offer.pinned %} pinned{% endif %}" type="submit"
                   title="{{ 'Открепить вес' if offer.pinned else 'Закрепить вес (не меняется при пересчётах)' }}">📌</button>
         </form>
@@ -57,11 +53,11 @@
       <td class="muted">—</td>
       <td class="right">
         {% if offer.status == 'active' %}
-        <form hx-post="/offers/{{ offer.id }}/remove" hx-target="#editor-body" hx-swap="outerHTML" class="inline">
+        <form hx-post="/offers/{{ offer.id }}/remove" hx-target="#stream-body-{{ stream.id }}" hx-swap="outerHTML" class="inline">
           <button class="btn danger" type="submit">Удалить</button>
         </form>
         {% else %}
-        <form hx-post="/offers/{{ offer.id }}/restore" hx-target="#editor-body" hx-swap="outerHTML" class="inline">
+        <form hx-post="/offers/{{ offer.id }}/restore" hx-target="#stream-body-{{ stream.id }}" hx-swap="outerHTML" class="inline">
           <button class="btn" type="submit">Bring back</button>
         </form>
         {% endif %}
@@ -70,8 +66,8 @@
     {% endfor %}
     </tbody>
   </table>
-  <form class="add-offer" hx-post="/campaigns/{{ campaign.keitaro_id }}/offers"
-        hx-target="#editor-body" hx-swap="outerHTML">
+  <form class="add-offer" hx-post="/campaigns/{{ campaign_id }}/offers"
+        hx-target="#stream-body-{{ stream.id }}" hx-swap="outerHTML">
     <input type="hidden" name="stream_id" value="{{ stream.id }}">
     <input type="hidden" name="offer_id" value="">
     <span class="search-wrap">
@@ -82,5 +78,4 @@
   </form>
   {% endif %}
 </section>
-{% endfor %}
 </div>

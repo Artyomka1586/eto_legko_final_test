@@ -118,6 +118,41 @@ def create_campaign(db: Session, kt: KeitaroClient, name: str, geo: str, offer_i
 # --- часть 2: синхронизация и редактор -------------------------------------
 
 
+def add_stream(
+    db: Session,
+    kt: KeitaroClient,
+    campaign: Campaign,
+    name: str,
+    kind: str,
+    url: str | None = None,
+    geo: str | None = None,
+) -> Stream:
+    """Новый поток кампании: офферный (пустой) или редирект на URL (с гео-фильтром)."""
+    if kind == "redirect":
+        payload = {
+            "campaign_id": campaign.keitaro_id,
+            "name": name,
+            "schema": "redirect",
+            "action_options": {"url": url},
+        }
+        if geo:
+            payload["filters"] = [{"name": "country", "mode": "accept", "payload": [geo.upper()]}]
+    else:
+        payload = {"campaign_id": campaign.keitaro_id, "name": name, "schema": "landings", "offers": []}
+    remote = kt.create_stream(payload)
+    stream = Stream(
+        campaign_id=campaign.id,
+        keitaro_stream_id=remote["id"],
+        name=name,
+        position=remote.get("position") or 0,
+        has_offers=(kind != "redirect"),
+        redirect_url=url if kind == "redirect" else None,
+    )
+    db.add(stream)
+    db.commit()
+    return stream
+
+
 def campaign_geo_from_streams(kt_streams: list[dict]) -> str | None:
     """Гео кампании берём из country-фильтра её потоков (для кампаний, созданных вне обёртки)."""
     for stream in kt_streams:
@@ -151,6 +186,7 @@ def sync_campaign_streams(db: Session, kt: KeitaroClient, campaign: Campaign) ->
     for remote in sorted(remote_streams, key=lambda s: s.get("position") or 0):
         remote_offers = {o["offer_id"]: o["share"] for o in (remote.get("offers") or [])}
         redirect_url = (remote.get("action_options") or {}).get("url")
+        is_offers_stream = remote.get("schema") == "landings"
         stream = db.scalar(
             select(Stream).where(
                 Stream.campaign_id == campaign.id,
@@ -163,7 +199,7 @@ def sync_campaign_streams(db: Session, kt: KeitaroClient, campaign: Campaign) ->
                 keitaro_stream_id=remote["id"],
                 name=remote.get("name") or "",
                 position=remote.get("position") or 0,
-                has_offers=bool(remote_offers),
+                has_offers=is_offers_stream,
                 redirect_url=redirect_url,
             )
             db.add(stream)
@@ -171,11 +207,8 @@ def sync_campaign_streams(db: Session, kt: KeitaroClient, campaign: Campaign) ->
         else:
             stream.name = remote.get("name") or stream.name
             stream.position = remote.get("position") or stream.position
-            stream.has_offers = bool(remote_offers)
+            stream.has_offers = is_offers_stream
             stream.redirect_url = redirect_url
-
-        if not remote_offers:
-            continue
 
         for offer in db.scalars(
             select(StreamOffer).where(StreamOffer.stream_id == stream.id)

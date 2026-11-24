@@ -1,0 +1,40 @@
+<div id="campaign-body">
+{% if error %}<div class="flash flash-error">{{ error }}</div>{% endif %}
+{% if message %}<div class="flash flash-ok">{{ message }}</div>{% endif %}
+
+{% if not campaign.streams %}
+<p class="muted">Потоков нет. Нажмите «Fetch Streams», чтобы подтянуть их из Keitaro, или добавьте новый ниже.</p>
+{% endif %}
+
+{% for stream in campaign.streams %}
+<section class="stream-card{% if stream.dirty %} dirty{% endif %}">
+  <header class="stream-head">
+    <a class="stream-name" href="/campaigns/{{ campaign.keitaro_id }}/streams/{{ stream.id }}">{{ stream.name }}</a>
+    <span class="muted">#{{ stream.keitaro_stream_id }}</span>
+    {% if stream.has_offers %}
+      <span class="badge badge-count">{{ stream.offers | selectattr('status', 'equalto', 'active') | list | length }} активных</span>
+    {% else %}
+      <span class="badge">redirect</span>
+      {% if stream.redirect_url %}<span class="muted redirect-inline">→ <a href="{{ stream.redirect_url }}" target="_blank" rel="noopener">{{ stream.redirect_url }}</a></span>{% endif %}
+    {% endif %}
+    {% if stream.dirty %}<span class="badge badge-dirty">не опубликован</span>{% endif %}
+    <span class="muted open-hint">открыть →</span>
+  </header>
+</section>
+{% endfor %}
+
+<h2 class="section-label">Добавить поток</h2>
+<form class="add-stream" hx-post="/campaigns/{{ campaign.keitaro_id }}/streams"
+      hx-target="#campaign-body" hx-swap="outerHTML">
+  <input name="name" placeholder="Название" required>
+  <select name="kind">
+    <option value="offers">Офферный</option>
+    <option value="redirect">Редирект</option>
+  </select>
+  <input name="url" placeholder="URL (для редиректа)" value="https://www.google.com/">
+  <input name="geo" placeholder="Гео" maxlength="2" value="{{ campaign.geo or '' }}">
+  <button class="btn primary" type="submit">Добавить</button>
+</form>
+<p class="hint">Гео-фильтр применяется к потоку-редиректу: трафик из указанной страны уходит на URL.
+Для офферного потока поля «URL» и «Гео» игнорируются — офферы добавляются внутри потока.</p>
+</div>

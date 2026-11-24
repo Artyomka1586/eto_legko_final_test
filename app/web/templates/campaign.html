@@ -1,15 +1,15 @@
 {% extends "base.html" %}
-{% block title %}{{ campaign.name }} — редактор{% endblock %}
-{% block crumbs %}<a href="/">Кампании</a><span class="sep">/</span><span>редактор офферов</span>{% endblock %}
+{% block title %}{{ campaign.name }}{% endblock %}
+{% block crumbs %}<a href="/">Кампании</a><span class="sep">/</span><span>{{ campaign.name }}</span>{% endblock %}
 {% block content %}
 <div class="editor-head">
   <div>
     <h1>{{ campaign.name }}</h1>
     <p class="muted">Keitaro ID: {{ campaign.keitaro_id }}{% if campaign.geo %} · гео: {{ campaign.geo }}{% endif %}</p>
   </div>
-  <form hx-post="/campaigns/{{ campaign.keitaro_id }}/fetch" hx-target="#editor-body" hx-swap="outerHTML">
+  <form hx-post="/campaigns/{{ campaign.keitaro_id }}/fetch" hx-target="#campaign-body" hx-swap="outerHTML">
     <button class="btn primary" type="submit">Fetch Streams</button>
   </form>
 </div>
-{% include "_editor_body.html" %}
+{% include "_campaign_body.html" %}
 {% endblock %}
