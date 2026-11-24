@@ -72,8 +72,10 @@
         hx-target="#editor-body" hx-swap="outerHTML">
     <input type="hidden" name="stream_id" value="{{ stream.id }}">
     <input type="hidden" name="offer_id" value="">
-    <input type="text" class="offer-search" placeholder="Поиск оффера (ID или название)…" autocomplete="off">
-    <div class="offer-list" hidden></div>
+    <span class="search-wrap">
+      <input type="text" class="offer-search" placeholder="Поиск оффера (ID или название)…" autocomplete="off">
+      <div class="offer-list" hidden></div>
+    </span>
     <button class="btn primary" type="submit">Добавить</button>
   </form>
   {% endif %}

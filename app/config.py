@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     keitaro_api_url: str = "https://keitaro-for-tests.etolegko.com/admin_api/v1"
     keitaro_api_token: str = ""
     database_url: str = "sqlite:///./wrapper.db"
-    campaign_name_prefix: str = "test_ulybin_"
+    campaign_name_prefix: str = "test_adulybin_"
 
 
 @lru_cache

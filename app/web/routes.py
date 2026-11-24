@@ -92,18 +92,21 @@ def index(request: Request, db: Session = Depends(get_db), error: str | None = N
 def create_campaign(
     name: str = Form(...),
     geo: str = Form(...),
-    offer_id: int = Form(...),
+    offer_id: str = Form(""),
     db: Session = Depends(get_db),
 ):
     kt = get_client()
     name = name.strip()
     geo = geo.strip().upper()
+    offer_id = offer_id.strip()
     if not name:
         return RedirectResponse(f"/?error={quote('Укажите название кампании')}", 303)
     if len(geo) != 2 or not geo.isalpha():
         return RedirectResponse(f"/?error={quote('Гео-код: две латинские буквы, например US')}", 303)
+    if not offer_id.isdigit() or int(offer_id) not in services.offer_catalog():
+        return RedirectResponse(f"/?error={quote('Выберите оффер из поиска')}", 303)
     try:
-        campaign = services.create_campaign(db, kt, name, geo, offer_id)
+        campaign = services.create_campaign(db, kt, name, geo, int(offer_id))
     except (KeitaroError, ValueError) as exc:
         return RedirectResponse(f"/?error={quote(str(exc))}", 303)
     return RedirectResponse(f"/campaigns/{campaign.keitaro_id}", 303)

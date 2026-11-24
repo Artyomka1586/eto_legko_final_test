@@ -5,7 +5,7 @@
 
 <form method="post" action="/campaigns" class="creator">
   <label>
-    Название <span class="muted">(префикс test_ulybin_ добавится автоматически)</span>
+    Название <span class="muted">(префикс test_adulybin_ добавится автоматически)</span>
     <input name="name" required placeholder="campaign1">
   </label>
   <label>
@@ -14,8 +14,12 @@
            title="Две латинские буквы, например US" style="text-transform: uppercase;">
   </label>
   <label>
-    ID оффера в Keitaro
-    <input name="offer_id" type="number" required placeholder="18001">
+    Оффер <span class="muted">(поиск по каталогу Keitaro)</span>
+    <span class="search-wrap">
+      <input type="text" class="offer-search" placeholder="ID или название оффера…" autocomplete="off">
+      <div class="offer-list" hidden></div>
+    </span>
+    <input type="hidden" name="offer_id" value="">
   </label>
   <button class="btn primary" type="submit">Создать кампанию</button>
 </form>

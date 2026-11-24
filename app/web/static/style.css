@@ -130,24 +130,28 @@ tr.offer.removed .offer-name { text-decoration: line-through; }
 }
 .pin.pinned { filter: none; opacity: 1; background: #fff3cd; border-color: #f0d264; }
 
-/* --- добавление оффера --- */
+/* --- поиск офферов (общий для формы создания и редактора) --- */
 
-.add-offer { display: flex; gap: 8px; margin-top: 12px; position: relative; }
-.add-offer .offer-search {
-  flex: 1;
-  max-width: 480px;
+.add-offer { display: flex; gap: 8px; margin-top: 12px; }
+
+.search-wrap { display: flex; position: relative; }
+.add-offer .search-wrap { flex: 1; max-width: 480px; }
+.search-wrap .offer-search { flex: 1; }
+
+.offer-search {
   padding: 8px 10px;
   border: 1px solid #cbd2d9;
   border-radius: 6px;
   font-size: 14px;
 }
+.creator .offer-search { width: 100%; }
 
 .offer-list {
   position: absolute;
-  top: 42px;
+  top: calc(100% + 4px);
   left: 0;
   z-index: 10;
-  width: 480px;
+  width: 100%;
   max-height: 260px;
   overflow-y: auto;
   background: #fff;
