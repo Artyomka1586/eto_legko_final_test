@@ -1,0 +1,168 @@
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: #1f2933;
+  background: #f5f7fa;
+}
+
+.topnav {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  padding: 14px 24px;
+  background: #102a43;
+  color: #fff;
+}
+.topnav a { color: #fff; font-weight: 600; text-decoration: none; }
+.topnav .muted { color: #9fb3c8; font-size: 13px; }
+
+.container { max-width: 960px; margin: 0 auto; padding: 24px 16px 64px; }
+
+h1 { font-size: 24px; margin: 0 0 16px; }
+h2 { font-size: 18px; margin: 32px 0 12px; }
+
+.muted { color: #7b8794; font-size: 13px; }
+.right { text-align: right; }
+.inline { display: inline; }
+
+/* --- формы создания --- */
+
+.creator { display: flex; flex-direction: column; gap: 12px; max-width: 420px; }
+.creator label { display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
+.creator input {
+  padding: 8px 10px;
+  border: 1px solid #cbd2d9;
+  border-radius: 6px;
+  font-size: 14px;
+}
+.creator input:focus { outline: 2px solid #2680c2; border-color: #2680c2; }
+.hint { color: #7b8794; font-size: 13px; max-width: 620px; }
+
+/* --- кнопки --- */
+
+.btn {
+  display: inline-block;
+  padding: 7px 14px;
+  border: 1px solid #cbd2d9;
+  border-radius: 6px;
+  background: #fff;
+  color: #1f2933;
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: none;
+}
+.btn:hover { background: #f0f4f8; }
+.btn.primary { background: #2680c2; border-color: #2680c2; color: #fff; }
+.btn.primary:hover { background: #1d6bb0; }
+.btn.danger { color: #cd2c2c; border-color: #e3b4b4; }
+.btn.danger:hover { background: #fef0f0; }
+
+/* --- флэш-сообщения --- */
+
+.flash { padding: 10px 14px; border-radius: 6px; margin: 0 0 16px; font-size: 14px; }
+.flash-error { background: #fef0f0; color: #c0392b; border: 1px solid #f5c6cb; }
+.flash-ok { background: #e8f6ef; color: #1e7a4f; border: 1px solid #bce3cd; }
+
+/* --- редактор --- */
+
+.editor-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.stream-card {
+  background: #fff;
+  border: 1px solid #d9e2ec;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.stream-card.dirty { background: #fff9db; border-color: #f0d264; }
+
+.stream-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.stream-name { font-weight: 600; font-size: 16px; }
+.stream-actions { margin-left: auto; display: flex; gap: 8px; }
+
+.badge {
+  font-size: 12px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: #e8f6ef;
+  color: #1e7a4f;
+}
+.badge-dirty { background: #f6e05e; color: #744210; }
+
+/* --- таблица офферов --- */
+
+.table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.table th {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 2px solid #d9e2ec;
+  color: #627d98;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.table td { padding: 10px; border-bottom: 1px solid #e4eaf0; vertical-align: top; }
+.table tr:last-child td { border-bottom: none; }
+
+tr.offer.removed { color: #9aa5b1; }
+tr.offer.removed .offer-name { text-decoration: line-through; }
+
+.share-cell { white-space: nowrap; }
+.share-value { font-variant-numeric: tabular-nums; font-weight: 600; margin-right: 6px; }
+
+.pin {
+  border: 1px solid #d9e2ec;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  padding: 2px 7px;
+  font-size: 13px;
+  filter: grayscale(1);
+  opacity: 0.55;
+}
+.pin.pinned { filter: none; opacity: 1; background: #fff3cd; border-color: #f0d264; }
+
+/* --- добавление оффера --- */
+
+.add-offer { display: flex; gap: 8px; margin-top: 12px; position: relative; }
+.add-offer .offer-search {
+  flex: 1;
+  max-width: 480px;
+  padding: 8px 10px;
+  border: 1px solid #cbd2d9;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.offer-list {
+  position: absolute;
+  top: 42px;
+  left: 0;
+  z-index: 10;
+  width: 480px;
+  max-height: 260px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #cbd2d9;
+  border-radius: 6px;
+  box-shadow: 0 6px 16px rgba(16, 42, 67, 0.12);
+}
+.offer-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border: none;
+  background: none;
+  font-size: 13px;
+  cursor: pointer;
+}
+.offer-item:hover { background: #f0f4f8; }
