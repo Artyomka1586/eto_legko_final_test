@@ -31,7 +31,9 @@
   </header>
 
   {% if not stream.has_offers %}
-    <p class="muted">Поток без офферов — не редактируется.</p>
+    <p class="muted">Поток без офферов — не редактируется.
+      {% if stream.redirect_url %}Redirect: <a href="{{ stream.redirect_url }}" target="_blank" rel="noopener">{{ stream.redirect_url }}</a>{% endif %}
+    </p>
   {% else %}
   <table class="table offers-table">
     <thead>

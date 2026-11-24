@@ -90,6 +90,7 @@ def create_campaign(db: Session, kt: KeitaroClient, name: str, geo: str, offer_i
             name=GOOGLE_STREAM_NAME,
             position=google_stream.get("position") or 0,
             has_offers=False,
+            redirect_url="https://www.google.com/",
         ),
         Stream(
             keitaro_stream_id=offers_stream["id"],
@@ -149,6 +150,7 @@ def sync_campaign_streams(db: Session, kt: KeitaroClient, campaign: Campaign) ->
 
     for remote in sorted(remote_streams, key=lambda s: s.get("position") or 0):
         remote_offers = {o["offer_id"]: o["share"] for o in (remote.get("offers") or [])}
+        redirect_url = (remote.get("action_options") or {}).get("url")
         stream = db.scalar(
             select(Stream).where(
                 Stream.campaign_id == campaign.id,
@@ -162,6 +164,7 @@ def sync_campaign_streams(db: Session, kt: KeitaroClient, campaign: Campaign) ->
                 name=remote.get("name") or "",
                 position=remote.get("position") or 0,
                 has_offers=bool(remote_offers),
+                redirect_url=redirect_url,
             )
             db.add(stream)
             db.flush()
@@ -169,6 +172,7 @@ def sync_campaign_streams(db: Session, kt: KeitaroClient, campaign: Campaign) ->
             stream.name = remote.get("name") or stream.name
             stream.position = remote.get("position") or stream.position
             stream.has_offers = bool(remote_offers)
+            stream.redirect_url = redirect_url
 
         if not remote_offers:
             continue

@@ -36,6 +36,8 @@ class Stream(Base):
     position: Mapped[int] = mapped_column(Integer, default=0)
     has_offers: Mapped[bool] = mapped_column(Boolean, default=False)
     dirty: Mapped[bool] = mapped_column(Boolean, default=False)
+    # URL, на который редиректит поток без офферов (для показа в редакторе).
+    redirect_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
 
     campaign: Mapped[Campaign] = relationship(back_populates="streams")
     offers: Mapped[list["StreamOffer"]] = relationship(
