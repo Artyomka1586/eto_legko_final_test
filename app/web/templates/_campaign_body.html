@@ -9,7 +9,7 @@
 {% for stream in campaign.streams %}
 <section class="stream-card{% if stream.dirty %} dirty{% endif %}">
   <header class="stream-head">
-    <a class="stream-name" href="/campaigns/{{ campaign.keitaro_id }}/streams/{{ stream.id }}">{{ stream.name }}</a>
+    <span class="stream-name">{{ stream.name }}</span>
     <span class="muted">#{{ stream.keitaro_stream_id }}</span>
     {% if stream.has_offers %}
       <span class="badge badge-count">{{ stream.offers | selectattr('status', 'equalto', 'active') | list | length }} активных</span>
@@ -18,9 +18,10 @@
       {% if stream.redirect_url %}<span class="muted redirect-inline">→ <a href="{{ stream.redirect_url }}" target="_blank" rel="noopener">{{ stream.redirect_url }}</a></span>{% endif %}
     {% endif %}
     {% if stream.dirty %}<span class="badge badge-dirty">не опубликован</span>{% endif %}
-    <a class="btn open-link" href="/campaigns/{{ campaign.keitaro_id }}/streams/{{ stream.id }}">
-      {{ "Перейти к офферам →" if stream.has_offers else "Открыть поток →" }}
-    </a>
+    <form hx-post="/streams/{{ stream.id }}/delete" hx-target="#campaign-body" hx-swap="outerHTML"
+          hx-confirm="Удалить поток «{{ stream.name }}» из Keitaro?" class="inline stream-delete">
+      <button class="btn danger" type="submit">Удалить</button>
+    </form>
   </header>
 </section>
 {% endfor %}
@@ -38,5 +39,5 @@
   <button class="btn primary" type="submit">Добавить</button>
 </form>
 <p class="hint">Гео-фильтр применяется к потоку-редиректу: трафик из указанной страны уходит на URL.
-Для офферного потока поля «URL» и «Гео» игнорируются — офферы добавляются внутри потока.</p>
+Для офферного потока поля «URL» и «Гео» игнорируются — офферы добавляются в редакторе офферов.</p>
 </div>

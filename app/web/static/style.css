@@ -89,6 +89,9 @@ input:focus, select:focus { outline: 2px solid #2f81c9; border-color: #2f81c9; }
   margin-bottom: 20px;
 }
 
+.head-actions { display: flex; gap: 8px; }
+.stream-delete { margin-left: auto; }
+
 .stream-card {
   background: #131c2b;
   border: 1px solid #263450;

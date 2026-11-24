@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}{{ campaign.name }} — офферы{% endblock %}
+{% block crumbs %}<a href="/">Кампании</a><span class="sep">/</span><a href="/campaigns/{{ campaign.keitaro_id }}">{{ campaign.name }}</a><span class="sep">/</span><span>потоки</span>{% endblock %}
+{% block content %}
+<div class="editor-head">
+  <div>
+    <h1>{{ campaign.name }}</h1>
+    <p class="muted">Keitaro ID: {{ campaign.keitaro_id }}{% if campaign.geo %} · гео: {{ campaign.geo }}{% endif %}
+      · <a href="/campaigns/{{ campaign.keitaro_id }}">управление потоками</a></p>
+  </div>
+  <form hx-post="/campaigns/{{ campaign.keitaro_id }}/fetch?view=offers" hx-target="#offers-body" hx-swap="outerHTML">
+    <button class="btn" type="submit">Fetch Streams</button>
+  </form>
+</div>
+{% include "_offers_body.html" %}
+{% endblock %}

@@ -153,6 +153,13 @@ def add_stream(
     return stream
 
 
+def delete_stream(db: Session, kt: KeitaroClient, stream: Stream) -> None:
+    """Удаление потока: сначала из Keitaro, затем локальная запись (офферы уйдут каскадом)."""
+    kt.delete_stream(stream.keitaro_stream_id)
+    db.delete(stream)
+    db.commit()
+
+
 def campaign_geo_from_streams(kt_streams: list[dict]) -> str | None:
     """Гео кампании берём из country-фильтра её потоков (для кампаний, созданных вне обёртки)."""
     for stream in kt_streams:
