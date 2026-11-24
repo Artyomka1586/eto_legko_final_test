@@ -110,9 +110,12 @@ alembic/           # миграции
 В таблице `stream_offers` у каждого оффера хранится два набора значений:
 
 * `share`, `status`, `pinned` — то, что видит и меняет пользователь;
-* `published_share` — последний известный вес в Keitaro (`NULL` = оффера в Keitaro нет).
+* `published_share` — последний известный вес в Keitaro (`NULL` = оффера в Keitaro нет);
+* `ever_published` — был ли оффер когда-либо опубликован в Keitaro.
 
 Push отправляет активные офферы с весами в Keitaro (`PUT /streams/{id}`) и
-обновляет `published_share`. Cancel восстанавливает staging из `published_share`
-(строки без опубликованного состояния удаляются). Синхронизация (Fetch Streams)
-обновляет `published_share` и, если поток не «грязный», зеркалит staging.
+обновляет `published_share`. Cancel восстанавливает staging из `published_share`:
+локально добавленные и не пушнутые записи (`ever_published = false`) удаляются
+полностью, офферы, ранее опубликованные и удалённые, остаются в сером архиве
+с кнопкой bring back. Синхронизация (Fetch Streams) обновляет `published_share`
+и, если поток не «грязный», зеркалит staging.

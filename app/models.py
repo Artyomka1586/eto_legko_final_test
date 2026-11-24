@@ -60,5 +60,8 @@ class StreamOffer(Base):
     pinned: Mapped[bool] = mapped_column(Boolean, default=False)
     status: Mapped[str] = mapped_column(String(16), default="active")  # active | removed
     published_share: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # Был ли оффер когда-либо опубликован в Keitaro. False = добавлен локально и не пушнут:
+    # такая запись при удалении/отмене исчезает полностью, а не уходит в серый архив.
+    ever_published: Mapped[bool] = mapped_column(Boolean, default=False)
 
     stream: Mapped[Stream] = relationship(back_populates="offers")

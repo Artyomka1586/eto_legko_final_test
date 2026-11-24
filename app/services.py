@@ -106,6 +106,7 @@ def create_campaign(db: Session, kt: KeitaroClient, name: str, geo: str, offer_i
             published_share=100,
             status="active",
             pinned=False,
+            ever_published=True,
         )
     ]
     db.add(local)
@@ -177,6 +178,7 @@ def sync_campaign_streams(db: Session, kt: KeitaroClient, campaign: Campaign) ->
         ).all():
             if offer.keitaro_offer_id in remote_offers:
                 offer.published_share = remote_offers.pop(offer.keitaro_offer_id)
+                offer.ever_published = True
                 if not stream.dirty:
                     offer.status = "active"
                     offer.share = offer.published_share
@@ -195,6 +197,7 @@ def sync_campaign_streams(db: Session, kt: KeitaroClient, campaign: Campaign) ->
                     published_share=share,
                     status="active",
                     pinned=False,
+                    ever_published=True,
                 )
             )
     db.commit()
@@ -224,10 +227,17 @@ def add_offer(db: Session, stream: Stream, offer_id: int) -> None:
 
 
 def remove_offer(db: Session, offer: StreamOffer) -> None:
-    offer.status = "removed"
-    offer.share = 0
-    offer.stream.dirty = True
-    recalc_weights(offer.stream)
+    if not offer.ever_published:
+        # Локальная, никогда не пушнутая запись удаляется полностью.
+        stream = offer.stream
+        stream.offers.remove(offer)
+        stream.dirty = True
+        recalc_weights(stream)
+    else:
+        offer.status = "removed"
+        offer.share = 0
+        offer.stream.dirty = True
+        recalc_weights(offer.stream)
     db.commit()
 
 
@@ -257,7 +267,11 @@ def push_stream(db: Session, kt: KeitaroClient, stream: Stream) -> None:
         {"offers": [{"offer_id": o.keitaro_offer_id, "share": o.share} for o in active]},
     )
     for offer in stream.offers:
-        offer.published_share = offer.share if offer.status == "active" else None
+        if offer.status == "active":
+            offer.published_share = offer.share
+            offer.ever_published = True
+        else:
+            offer.published_share = None
     stream.dirty = False
     db.commit()
 
@@ -265,11 +279,17 @@ def push_stream(db: Session, kt: KeitaroClient, stream: Stream) -> None:
 def cancel_stream_changes(db: Session, stream: Stream) -> None:
     """Откат всех несохранённых изменений к последнему опубликованному состоянию."""
     for offer in list(stream.offers):
-        if offer.published_share is None:
-            stream.offers.remove(offer)  # delete-orphan: строка уйдёт из БД вместе с коллекцией
-        else:
+        if offer.published_share is not None:
             offer.share = offer.published_share
             offer.status = "active"
             offer.pinned = False
+        elif offer.ever_published:
+            # Был в Keitaro, но удалён там — остаётся серым архивом с bring back.
+            offer.status = "removed"
+            offer.share = 0
+            offer.pinned = False
+        else:
+            # Никогда не публиковался — привязка удаляется полностью.
+            stream.offers.remove(offer)
     stream.dirty = False
     db.commit()
