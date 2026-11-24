@@ -35,8 +35,10 @@ def _get_or_create_campaign(db: Session, kt: KeitaroClient, keitaro_id: int) -> 
         return campaign
     try:
         remote = kt.get_campaign(keitaro_id)
-    except KeitaroError:
-        raise HTTPException(status_code=404, detail=f"Кампания {keitaro_id} не найдена в Keitaro")
+    except KeitaroError as exc:
+        if exc.status == 404:
+            raise HTTPException(status_code=404, detail=f"Кампания {keitaro_id} не найдена в Keitaro")
+        raise HTTPException(status_code=502, detail=f"Keitaro недоступен: {exc}")
     campaign = Campaign(keitaro_id=remote["id"], name=remote.get("name") or "")
     db.add(campaign)
     db.flush()
@@ -141,8 +143,8 @@ def add_offer(
 ):
     campaign = _get_or_create_campaign(db, get_client(), keitaro_id)
     stream = _get_stream(db, campaign, stream_id)
-    if offer_id <= 0:
-        return _action_response(request, db, campaign, error="Выберите оффер из списка")
+    if offer_id <= 0 or offer_id not in services.offer_catalog():
+        return _action_response(request, db, campaign, error=f"Оффер {offer_id} не найден в Keitaro")
     services.add_offer(db, stream, offer_id)
     return _action_response(
         request, db, campaign, message=f"Оффер {offer_id} добавлен (не опубликовано — нажмите Push)"
