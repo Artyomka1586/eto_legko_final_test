@@ -11,7 +11,9 @@
 <body>
 <nav class="topnav">
   <a href="/">Обёртка Keitaro</a>
-  <span class="muted">создание кампаний · редактор офферов</span>
+  <span class="crumbs">
+    {% block crumbs %}<span>Кампании</span>{% endblock %}
+  </span>
 </nav>
 <main class="container">
 {% block content %}{% endblock %}
