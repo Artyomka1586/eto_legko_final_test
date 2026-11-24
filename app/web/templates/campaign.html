@@ -11,7 +11,6 @@
     <form hx-post="/campaigns/{{ campaign.keitaro_id }}/fetch" hx-target="#campaign-body" hx-swap="outerHTML">
       <button class="btn" type="submit">Fetch Streams</button>
     </form>
-    <a class="btn primary" href="/campaigns/{{ campaign.keitaro_id }}/offers">Перейти к офферам →</a>
   </div>
 </div>
 {% include "_campaign_body.html" %}

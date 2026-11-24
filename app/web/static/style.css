@@ -91,6 +91,7 @@ input:focus, select:focus { outline: 2px solid #2f81c9; border-color: #2f81c9; }
 
 .head-actions { display: flex; gap: 8px; }
 .stream-delete { margin-left: auto; }
+.bottom-actions { display: flex; justify-content: flex-end; margin-top: 14px; }
 
 .stream-card {
   background: #131c2b;
