@@ -1,4 +1,5 @@
 import httpx
+from typing import Any
 
 from app.config import get_settings
 
@@ -22,7 +23,9 @@ class KeitaroClient:
             timeout=timeout,
         )
 
-    def _request(self, method: str, path: str, json: dict | None = None) -> dict | list:
+    def _request(self, method: str, path: str, json: dict | None = None) -> Any:
+        """Разобранный JSON ответа. Форма (список или объект) зависит от эндпоинта,
+        поэтому транспорт возвращает Any — конкретные типы декларируют методы-обёртки."""
         response = self._http.request(method, path, json=json)
         if response.status_code >= 400:
             try:
