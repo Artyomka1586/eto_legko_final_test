@@ -240,11 +240,12 @@ def sync_campaign_streams(db: Session, kt: KeitaroClient, campaign: Campaign) ->
             select(StreamOffer).where(StreamOffer.stream_id == stream.id)
         ).all():
             if offer.keitaro_offer_id in remote_offers:
-                offer.published_share = remote_offers.pop(offer.keitaro_offer_id)
+                share = remote_offers.pop(offer.keitaro_offer_id)
+                offer.published_share = share
                 offer.ever_published = True
                 if not stream.dirty:
                     offer.status = "active"
-                    offer.share = offer.published_share
+                    offer.share = share
             else:
                 offer.published_share = None
                 if not stream.dirty:
