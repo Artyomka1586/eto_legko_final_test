@@ -1,4 +1,4 @@
-"""initial schema: campaigns, streams, stream_offers
+"""Начальная схема: campaigns, streams, stream_offers
 
 Revision ID: 0001
 Revises:

@@ -1,4 +1,4 @@
-"""stream_offers.ever_published: distinguishes never-pushed local additions from archived offers
+"""stream_offers.ever_published: отличает локальные непушнутые добавления от архивных офферов
 
 Revision ID: 0002
 Revises: 0001

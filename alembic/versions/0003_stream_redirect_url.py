@@ -1,4 +1,4 @@
-"""streams.redirect_url: store redirect target of no-offer streams for display
+"""streams.redirect_url: URL редиректа потоков без офферов (для показа в редакторе)
 
 Revision ID: 0003
 Revises: 0002

@@ -1,4 +1,4 @@
-"""stream_offers.published_pinned: pin snapshot at last push
+"""stream_offers.published_pinned: снапшот пина на момент последнего Push
 
 Revision ID: 0004
 Revises: 0003
