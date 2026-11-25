@@ -59,9 +59,11 @@ python -m venv .venv
 # source .venv/bin/activate     # Linux/macOS
 
 pip install -r requirements.txt
+cp .env.example .env            # и вписать в .env ключ API (см. ниже)
 ```
 
-Создать `.env` рядом с `requirements.txt` (см. `.env.example`):
+Ключ берётся в админке эмулятора Keitaro после входа через GitHub (плашка
+`Заголовок запроса: Api-Key: ...` вверху страницы) и кладётся в `.env`:
 
 ```ini
 KEITARO_API_URL=https://keitaro-for-tests.etolegko.com/admin_api/v1
@@ -70,16 +72,22 @@ KEITARO_API_TOKEN=<ваш ключ API>
 # CAMPAIGN_NAME_PREFIX=test_adulybin_
 ```
 
-Ключ берётся в админке эмулятора Keitaro после входа через GitHub (плашка
-`Заголовок запроса: Api-Key: ...` вверху страницы).
-
-## Миграции
-
-Схема БД управляется Alembic. Перед первым запуском применить миграции:
+Схема БД управляется Alembic; перед первым запуском применить миграции:
 
 ```bash
 alembic upgrade head
 ```
+
+Запуск сервера:
+
+```bash
+uvicorn app.main:app --reload
+```
+
+Приложение — http://127.0.0.1:8000
+(на Windows можно просто запустить `start.bat` — поднимет сервер и откроет браузер).
+
+## Миграции
 
 Создать новую миграцию после изменения моделей (`app/models.py`):
 
@@ -99,14 +107,6 @@ Keitaro подменяется заглушкой):
 ```bash
 pytest
 ```
-
-## Запуск приложения
-
-```bash
-uvicorn app.main:app --reload
-```
-
-Открыть http://127.0.0.1:8000
 
 ## Структура проекта
 
