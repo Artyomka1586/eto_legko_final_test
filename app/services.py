@@ -6,16 +6,34 @@ cancel откатывает staging к последнему опубликова
 """
 
 from functools import lru_cache
+from typing import Any, Protocol
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
-from app.keitaro import KeitaroClient, KeitaroError, get_client
+from app.keitaro import KeitaroError, get_client
 from app.models import Campaign, Stream, StreamOffer
 
 GOOGLE_STREAM_NAME = "Google"
 OFFERS_STREAM_NAME = "Offers"
+
+
+class KeitaroGateway(Protocol):
+    """Минимум Admin API, нужный бизнес-логике. Реальный KeitaroClient подходит,
+    заглушки в тестах — тоже (структурная типизация: важно наличие методов).
+    Возвраты объявлены Any: бизнес-логике важны сами вызовы и их побочные эффекты
+    в Keitaro; разбор ответов — забота KeitaroClient и мест использования."""
+
+    def list_domains(self) -> Any: ...
+    def list_groups(self) -> Any: ...
+    def list_traffic_sources(self) -> Any: ...
+    def list_streams(self, campaign_id: int) -> Any: ...
+    def create_campaign(self, **fields) -> Any: ...
+    def create_stream(self, payload: dict) -> Any: ...
+    def update_stream(self, stream_id: int, payload: dict) -> Any: ...
+    def delete_campaign(self, campaign_id: int) -> Any: ...
+    def delete_stream(self, stream_id: int) -> Any: ...
 
 
 # --- каталог офферов -------------------------------------------------------
@@ -60,7 +78,7 @@ def recalc_weights(stream: Stream) -> None:
 # --- часть 1: создание кампании --------------------------------------------
 
 
-def create_campaign(db: Session, kt: KeitaroClient, name: str, geo: str, offer_id: int) -> Campaign:
+def create_campaign(db: Session, kt: KeitaroGateway, name: str, geo: str, offer_id: int) -> Campaign:
     """Кампания с двумя потоками: (1) гео-фильтр → Google, (2) выбранный оффер."""
     domain = kt.list_domains()[0]
     group = kt.list_groups()[0]
@@ -139,7 +157,7 @@ def create_campaign(db: Session, kt: KeitaroClient, name: str, geo: str, offer_i
 
 def add_stream(
     db: Session,
-    kt: KeitaroClient,
+    kt: KeitaroGateway,
     campaign: Campaign,
     name: str,
     kind: str,
@@ -172,7 +190,7 @@ def add_stream(
     return stream
 
 
-def delete_stream(db: Session, kt: KeitaroClient, stream: Stream) -> None:
+def delete_stream(db: Session, kt: KeitaroGateway, stream: Stream) -> None:
     """Удаление потока: сначала из Keitaro, затем локальная запись (офферы уйдут каскадом)."""
     kt.delete_stream(stream.keitaro_stream_id)
     db.delete(stream)
@@ -190,7 +208,7 @@ def campaign_geo_from_streams(kt_streams: list[dict]) -> str | None:
     return None
 
 
-def sync_campaign_streams(db: Session, kt: KeitaroClient, campaign: Campaign) -> None:
+def sync_campaign_streams(db: Session, kt: KeitaroGateway, campaign: Campaign) -> None:
     """Fetch Streams: подтягивает потоки и офферы из Keitaro в локальный staging.
 
     Правила:
@@ -328,7 +346,7 @@ def toggle_pin(db: Session, offer: StreamOffer) -> None:
     db.commit()
 
 
-def push_stream(db: Session, kt: KeitaroClient, stream: Stream) -> None:
+def push_stream(db: Session, kt: KeitaroGateway, stream: Stream) -> None:
     """Публикация: заменяет офферы и веса потока в Keitaro локальным состоянием."""
     active = [o for o in stream.offers if o.status == "active"]
     kt.update_stream(

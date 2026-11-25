@@ -36,6 +36,7 @@ class FakeKeitaro:
     def __init__(self, fail_on_stream=None):
         self.fail_on_stream = fail_on_stream
         self.deleted_campaigns = []
+        self.deleted_streams = []
         self.updated_streams = {}
         self.next_stream_id = 901
 
@@ -59,6 +60,12 @@ class FakeKeitaro:
 
     def update_stream(self, stream_id, payload):
         self.updated_streams[stream_id] = payload
+
+    def delete_stream(self, stream_id):
+        self.deleted_streams.append(stream_id)
+
+    def list_streams(self, campaign_id):
+        return []
 
     def delete_campaign(self, campaign_id):
         self.deleted_campaigns.append(campaign_id)
