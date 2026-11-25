@@ -84,6 +84,8 @@ def make_campaign_with_stream(db):
 
 
 def test_add_offer_marks_dirty_and_recalculates(db):
+    """Добавление оффера: поток помечается «грязным», веса делятся поровну,
+    новый оффер ещё не опубликован (published_share нет)."""
     _, stream = make_campaign_with_stream(db)
     services.add_offer(db, stream, 18002)
     assert stream.dirty is True
@@ -93,6 +95,7 @@ def test_add_offer_marks_dirty_and_recalculates(db):
 
 
 def test_remove_never_published_deletes_row(db):
+    """Непушнутый оффер при удалении исчезает полностью — серый архив ему не положен."""
     _, stream = make_campaign_with_stream(db)
     services.add_offer(db, stream, 18002)
     services.remove_offer(db, stream.offers[1])
@@ -101,6 +104,7 @@ def test_remove_never_published_deletes_row(db):
 
 
 def test_remove_published_archives(db):
+    """Пушнутый оффер при удалении уходит в серый архив (bring back), запись остаётся в БД."""
     _, stream = make_campaign_with_stream(db)
     published = stream.offers[0]
     services.remove_offer(db, published)
@@ -110,6 +114,8 @@ def test_remove_published_archives(db):
 
 
 def test_cancel_restores_published_and_deletes_local(db):
+    """Cancel откатывает всё несохранённое: опубликованным возвращает вес и статус,
+    локальные непушнутые добавления удаляет полностью."""
     _, stream = make_campaign_with_stream(db)
     services.add_offer(db, stream, 18002)            # локальное, непушнутое
     services.remove_offer(db, stream.offers[0])      # опубликованное -> серый архив
@@ -121,13 +127,20 @@ def test_cancel_restores_published_and_deletes_local(db):
 
 
 def test_cancel_restores_pin_made_before_push(db):
-    """Пин, сделанный до Push, выживает после remove + Cancel (пин — часть сохранённого)."""
+    """Регрессия бага, найденного при ручном тестировании:
+    пин -> добавление оффера -> Push -> удаление нового оффера без сохранения ->
+    Cancel. Пин был сделан ДО Push, значит он часть сохранённого состояния
+    и не должен сбрасываться отменой."""
     _, stream = make_campaign_with_stream(db)
-    services.toggle_pin(db, stream.offers[0])
-    services.add_offer(db, stream, 18002)
-    services.push_stream(db, FakeKeitaro(), stream)  # опубликовано: 100 (пин) / 0
-    services.remove_offer(db, stream.offers[1])      # удаление без сохранения
-    services.cancel_stream_changes(db, stream)
+    services.toggle_pin(db, stream.offers[0])        # пиним 100% единственного оффера
+    services.add_offer(db, stream, 18002)            # добавляем второй -> 100 (пин) / 0
+    fake = FakeKeitaro()
+    services.push_stream(db, fake, stream)           # сохраняем: всё отработало как надо
+    assert fake.updated_streams[901] == {
+        "offers": [{"offer_id": 18001, "share": 100}, {"offer_id": 18002, "share": 0}]
+    }
+    services.remove_offer(db, stream.offers[1])      # удаляем новый оффер, НЕ сохраняем
+    services.cancel_stream_changes(db, stream)       # Cancel — пин должен выжить
     assert stream.offers[0].pinned is True
     assert stream.offers[0].share == 100
     assert [offer.status for offer in stream.offers] == ["active", "active"]
@@ -146,6 +159,8 @@ def test_cancel_reverts_unpin_made_after_push(db):
 
 
 def test_push_publishes_active_offers(db):
+    """Push отправляет в Keitaro активные офферы с весами и снапшотит их
+    как опубликованные (published_share, ever_published), поток становится чистым."""
     _, stream = make_campaign_with_stream(db)
     services.add_offer(db, stream, 18002)
     fake = FakeKeitaro()
@@ -159,6 +174,8 @@ def test_push_publishes_active_offers(db):
 
 
 def test_push_skips_removed_offers(db):
+    """Серые (удалённые) офферы в Push не попадают; их старое опубликованное
+    состояние затирается — оффера в Keitaro больше нет."""
     _, stream = make_campaign_with_stream(db)
     services.add_offer(db, stream, 18002)
     services.remove_offer(db, stream.offers[0])      # серый архив
@@ -169,6 +186,8 @@ def test_push_skips_removed_offers(db):
 
 
 def test_pin_freezes_share(db):
+    """Запиненный вес не меняется при добавлении новых офферов —
+    пересчитываются только свободные (100 − пины поровну)."""
     _, stream = make_campaign_with_stream(db)
     services.add_offer(db, stream, 18002)            # 50/50
     services.toggle_pin(db, stream.offers[0])        # пин 50
@@ -177,6 +196,7 @@ def test_pin_freezes_share(db):
 
 
 def test_unpin_recalculates(db):
+    """Снятие пина возвращает вес в общий пул — все свободные делят 100% поровну."""
     _, stream = make_campaign_with_stream(db)
     services.add_offer(db, stream, 18002)
     services.toggle_pin(db, stream.offers[0])        # пин 50
@@ -185,6 +205,8 @@ def test_unpin_recalculates(db):
 
 
 def test_create_campaign_creates_two_streams(db):
+    """Создатель кампаний: имя с префиксом, гео, поток Google-редиректа с гео-фильтром
+    и офферный поток с выбранным оффером (100%, сразу опубликован)."""
     fake = FakeKeitaro()
     campaign = services.create_campaign(db, fake, "ok", "DE", 18001)
     assert campaign.name == "test_adulybin_ok"

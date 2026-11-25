@@ -30,12 +30,14 @@ def shares(stream):
 
 
 def test_two_offers_split_evenly():
+    """База: два свободных оффера делят 100% пополам."""
     stream = make_stream([(0, False, "active"), (0, False, "active")])
     recalc_weights(stream)
     assert shares(stream) == [50, 50]
 
 
 def test_three_offers_remainder_goes_to_first():
+    """Остаток от деления достаётся первым офферам: 34/33/33, а не 33/33/34."""
     stream = make_stream([(0, False, "active")] * 3)
     recalc_weights(stream)
     assert shares(stream) == [34, 33, 33]
@@ -60,18 +62,21 @@ def test_two_pins_remainder_split():
 
 
 def test_removed_offers_do_not_participate():
+    """Серые (удалённые) офферы не участвуют в дележе — 100% делят только активные."""
     stream = make_stream([(0, False, "removed"), (0, False, "active"), (0, False, "active")])
     recalc_weights(stream)
     assert shares(stream) == [0, 50, 50]
 
 
 def test_all_pinned_new_offer_gets_zero():
+    """Все 100% запинены — добавленному офферу не достаётся ничего (остаток 0)."""
     stream = make_stream([(50, True, "active"), (50, True, "active"), (0, False, "active")])
     recalc_weights(stream)
     assert shares(stream) == [50, 50, 0]
 
 
 def test_no_free_offers_changes_nothing():
+    """Пересчёт без свободных офферов ничего не меняет (защита от деления на ноль)."""
     stream = make_stream([(50, True, "active"), (50, True, "active")])
     recalc_weights(stream)
     assert shares(stream) == [50, 50]
