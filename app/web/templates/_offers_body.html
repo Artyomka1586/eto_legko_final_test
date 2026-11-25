@@ -17,8 +17,7 @@
       <span class="badge{% if stream.dirty %} badge-dirty{% endif %}">
         {{ "unpublished" if stream.dirty else "synced" }}
       </span>
-      {% if stream.dirty %}
-      <span class="stream-actions">
+      <span class="stream-actions{% if not stream.dirty %} reserved{% endif %}">
         <form hx-post="/streams/{{ stream.id }}/push" hx-target="#offers-body" hx-swap="outerHTML" class="inline">
           <button class="btn primary" type="submit">Push</button>
         </form>
@@ -26,7 +25,6 @@
           <button class="btn" type="submit">Cancel</button>
         </form>
       </span>
-      {% endif %}
     {% else %}
       <span class="badge">redirect</span>
     {% endif %}
