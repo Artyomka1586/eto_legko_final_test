@@ -5,7 +5,7 @@
 </div>
 
 {% if not campaign.streams %}
-<p class="muted">Потоков нет. Вернитесь к управлению потоками, чтобы добавить их.</p>
+<p class="muted">No streams. Go back to stream management to add them.</p>
 {% endif %}
 
 {% for stream in campaign.streams %}
@@ -15,7 +15,7 @@
     <span class="muted">#{{ stream.keitaro_stream_id }}</span>
     {% if stream.has_offers %}
       <span class="badge{% if stream.dirty %} badge-dirty{% endif %}">
-        {{ "не опубликован" if stream.dirty else "синхронизирован" }}
+        {{ "unpublished" if stream.dirty else "synced" }}
       </span>
       {% if stream.dirty %}
       <span class="stream-actions">
@@ -33,26 +33,26 @@
   </header>
 
   {% if not stream.has_offers %}
-    <p class="muted">Поток без офферов — не редактируется.
+    <p class="muted">Stream without offers — not editable.
       {% if stream.redirect_url %}Redirect: <a href="{{ stream.redirect_url }}" target="_blank" rel="noopener">{{ stream.redirect_url }}</a>{% endif %}
     </p>
   {% else %}
   <table class="table offers-table">
     <thead>
-    <tr><th>Оффер</th><th>Share</th><th>Stats</th><th>Trends</th><th class="right">Действия</th></tr>
+    <tr><th>Offer</th><th>Share</th><th>Stats</th><th>Trends</th><th class="right">Actions</th></tr>
     </thead>
     <tbody>
     {% for offer in stream.offers %}
     <tr class="offer{% if offer.status == 'removed' %} removed{% endif %}">
       <td>
         <div class="offer-name">{{ offer.offer_name }}</div>
-        <div class="muted">ID {{ offer.keitaro_offer_id }}{% if offer.published_share is none %} · нет в Keitaro{% endif %}</div>
+        <div class="muted">ID {{ offer.keitaro_offer_id }}{% if offer.published_share is none %} · not in Keitaro{% endif %}</div>
       </td>
       <td class="share-cell">
         <span class="share-value">{{ offer.share }}%</span>
         <form hx-post="/offers/{{ offer.id }}/pin" hx-target="#offers-body" hx-swap="outerHTML" class="inline">
           <button class="pin{% if offer.pinned %} pinned{% endif %}" type="submit"
-                  title="{{ 'Открепить вес' if offer.pinned else 'Закрепить вес (не меняется при пересчётах)' }}">📌</button>
+                  title="{{ 'Unpin share' if offer.pinned else 'Pin share (kept fixed on recalculation)' }}">📌</button>
         </form>
       </td>
       <td class="muted">—</td>
@@ -60,7 +60,7 @@
       <td class="right">
         {% if offer.status == 'active' %}
         <form hx-post="/offers/{{ offer.id }}/remove" hx-target="#offers-body" hx-swap="outerHTML" class="inline">
-          <button class="btn danger" type="submit">Удалить</button>
+          <button class="btn danger" type="submit">Remove</button>
         </form>
         {% else %}
         <form hx-post="/offers/{{ offer.id }}/restore" hx-target="#offers-body" hx-swap="outerHTML" class="inline">
@@ -77,10 +77,10 @@
     <input type="hidden" name="stream_id" value="{{ stream.id }}">
     <input type="hidden" name="offer_id" value="">
     <span class="search-wrap">
-      <input type="text" class="offer-search" placeholder="Поиск оффера (ID или название)…" autocomplete="off">
+      <input type="text" class="offer-search" placeholder="Search offers (ID or name)…" autocomplete="off">
       <div class="offer-list" hidden></div>
     </span>
-    <button class="btn primary" type="submit">Добавить</button>
+    <button class="btn primary" type="submit">Add</button>
   </form>
   {% endif %}
 </section>

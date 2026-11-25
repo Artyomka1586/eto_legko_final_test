@@ -164,6 +164,10 @@ tr.offer.removed .muted { color: #4d5d70; }
 .share-cell { white-space: nowrap; }
 .share-value { font-variant-numeric: tabular-nums; font-weight: 600; margin-right: 6px; }
 
+/* кнопки в колонке действий одной ширины: Remove/Bring back не двигают столбцы */
+.offers-table .btn { min-width: 96px; }
+.offers-table td.right { white-space: nowrap; }
+
 .pin {
   border: 1px solid #2c3e5a;
   border-radius: 6px;

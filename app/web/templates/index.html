@@ -1,38 +1,38 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Создание кампании</h1>
+<h1>Create Campaign</h1>
 <div class="flash-slot">
 {% if error %}<div class="flash flash-error">{{ error }}</div>{% endif %}
 </div>
 
 <form method="post" action="/campaigns" class="creator">
   <label>
-    Название <span class="muted">(префикс test_adulybin_ добавится автоматически)</span>
+    Name <span class="muted">(the test_adulybin_ prefix is added automatically)</span>
     <input name="name" required placeholder="campaign1">
   </label>
   <label>
-    Гео-код страны <span class="muted">(ISO 3166-1, 2 буквы)</span>
+    Country code <span class="muted">(ISO 3166-1, 2 letters)</span>
     <input name="geo" required maxlength="2" placeholder="US" pattern="[A-Za-z]{2}"
-           title="Две латинские буквы, например US" style="text-transform: uppercase;">
+           title="Two Latin letters, e.g. US" style="text-transform: uppercase;">
   </label>
   <label>
-    Оффер <span class="muted">(поиск по каталогу Keitaro)</span>
+    Offer <span class="muted">(search the Keitaro catalog)</span>
     <span class="search-wrap">
-      <input type="text" class="offer-search" placeholder="ID или название оффера…" autocomplete="off">
+      <input type="text" class="offer-search" placeholder="Offer ID or name…" autocomplete="off">
       <div class="offer-list" hidden></div>
     </span>
     <input type="hidden" name="offer_id" value="">
   </label>
-  <button class="btn primary" type="submit">Создать кампанию</button>
+  <button class="btn primary" type="submit">Create campaign</button>
 </form>
-<p class="hint">Создаётся кампания с двумя потоками: (1) трафик из указанной страны → Google,
-(2) выбранный оффер. Домен, группа и источник берутся из Keitaro автоматически.</p>
+<p class="hint">Creates a campaign with two streams: (1) traffic from the given country → Google,
+(2) the selected offer. Domain, group and traffic source are picked from Keitaro automatically.</p>
 
-<h2>Кампании Keitaro</h2>
+<h2>Keitaro Campaigns</h2>
 {% if campaigns %}
 <table class="table">
   <thead>
-  <tr><th>ID</th><th>Название</th><th>Группа</th><th>Домен</th><th class="right">Действия</th></tr>
+  <tr><th>ID</th><th>Name</th><th>Group</th><th>Domain</th><th class="right">Actions</th></tr>
   </thead>
   <tbody>
   {% for c in campaigns %}
@@ -41,12 +41,12 @@
     <td>{{ c.name }}</td>
     <td>{{ c.group or "—" }}</td>
     <td>{{ c.domain or "—" }}</td>
-    <td class="right"><a class="btn" href="/campaigns/{{ c.id }}">Открыть редактор</a></td>
+    <td class="right"><a class="btn" href="/campaigns/{{ c.id }}">Open editor</a></td>
   </tr>
   {% endfor %}
   </tbody>
 </table>
 {% else %}
-<p class="muted">Кампаний пока нет.</p>
+<p class="muted">No campaigns yet.</p>
 {% endif %}
 {% endblock %}

@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 {% block title %}{{ campaign.name }}{% endblock %}
-{% block crumbs %}<a href="/">Кампании</a><span class="sep">/</span><span>{{ campaign.name }}</span>{% endblock %}
+{% block crumbs %}<a href="/">Campaigns</a><span class="sep">/</span><span>{{ campaign.name }}</span>{% endblock %}
 {% block content %}
 <div class="editor-head">
   <div>
     <h1>{{ campaign.name }}</h1>
-    <p class="muted">Keitaro ID: {{ campaign.keitaro_id }}{% if campaign.geo %} · гео: {{ campaign.geo }}{% endif %}</p>
+    <p class="muted">Keitaro ID: {{ campaign.keitaro_id }}{% if campaign.geo %} · geo: {{ campaign.geo }}{% endif %}</p>
   </div>
   <div class="head-actions">
     <form hx-post="/campaigns/{{ campaign.keitaro_id }}/fetch" hx-target="#campaign-body" hx-swap="outerHTML">

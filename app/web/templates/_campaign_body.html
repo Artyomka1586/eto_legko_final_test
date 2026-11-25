@@ -6,10 +6,10 @@
 
 {% if kt_campaign and catalogs %}
 <section class="params-card">
-  <h2 class="section-label">Параметры кампании в Keitaro</h2>
+  <h2 class="section-label">Campaign settings in Keitaro</h2>
   <form class="params-form" hx-post="/campaigns/{{ campaign.keitaro_id }}/params"
         hx-target="#campaign-body" hx-swap="outerHTML">
-    <label>Домен
+    <label>Domain
       <select name="domain_id">
         {% if kt_campaign.domain_id and kt_campaign.domain_id not in (catalogs.domains | map(attribute='id') | list) %}
         <option value="{{ kt_campaign.domain_id }}" selected>ID {{ kt_campaign.domain_id }}</option>
@@ -19,7 +19,7 @@
         {% endfor %}
       </select>
     </label>
-    <label>Группа
+    <label>Group
       <select name="group_id">
         {% if kt_campaign.group_id and kt_campaign.group_id not in (catalogs.groups | map(attribute='id') | list) %}
         <option value="{{ kt_campaign.group_id }}" selected>ID {{ kt_campaign.group_id }}</option>
@@ -29,7 +29,7 @@
         {% endfor %}
       </select>
     </label>
-    <label>Источник
+    <label>Traffic source
       <select name="traffic_source_id">
         {% if kt_campaign.traffic_source_id and kt_campaign.traffic_source_id not in (catalogs.sources | map(attribute='id') | list) %}
         <option value="{{ kt_campaign.traffic_source_id }}" selected>ID {{ kt_campaign.traffic_source_id }}</option>
@@ -39,13 +39,13 @@
         {% endfor %}
       </select>
     </label>
-    <button class="btn primary" type="submit">Сохранить</button>
+    <button class="btn primary" type="submit">Save</button>
   </form>
 </section>
 {% endif %}
 
 {% if not campaign.streams %}
-<p class="muted">Потоков нет. Нажмите «Fetch Streams», чтобы подтянуть их из Keitaro, или добавьте новый ниже.</p>
+<p class="muted">No streams yet. Click Fetch Streams to pull them from Keitaro, or add a new one below.</p>
 {% endif %}
 
 {% for stream in campaign.streams %}
@@ -54,36 +54,36 @@
     <span class="stream-name">{{ stream.name }}</span>
     <span class="muted">#{{ stream.keitaro_stream_id }}</span>
     {% if stream.has_offers %}
-      <span class="badge badge-count">{{ stream.offers | selectattr('status', 'equalto', 'active') | list | length }} активных</span>
+      <span class="badge badge-count">{{ stream.offers | selectattr('status', 'equalto', 'active') | list | length }} active</span>
     {% else %}
       <span class="badge">redirect</span>
       {% if stream.redirect_url %}<span class="muted redirect-inline">→ <a href="{{ stream.redirect_url }}" target="_blank" rel="noopener">{{ stream.redirect_url }}</a></span>{% endif %}
     {% endif %}
-    {% if stream.dirty %}<span class="badge badge-dirty">не опубликован</span>{% endif %}
+    {% if stream.dirty %}<span class="badge badge-dirty">unpublished</span>{% endif %}
     <form hx-post="/streams/{{ stream.id }}/delete" hx-target="#campaign-body" hx-swap="outerHTML"
-          hx-confirm="Удалить поток «{{ stream.name }}» из Keitaro?" class="inline stream-delete">
-      <button class="btn danger" type="submit">Удалить</button>
+          hx-confirm="Delete stream &quot;{{ stream.name }}&quot; from Keitaro?" class="inline stream-delete">
+      <button class="btn danger" type="submit">Delete</button>
     </form>
   </header>
 </section>
 {% endfor %}
 
-<h2 class="section-label">Добавить поток</h2>
+<h2 class="section-label">Add stream</h2>
 <form class="add-stream" hx-post="/campaigns/{{ campaign.keitaro_id }}/streams"
       hx-target="#campaign-body" hx-swap="outerHTML">
-  <input name="name" placeholder="Название" required>
+  <input name="name" placeholder="Name" required>
   <select name="kind">
-    <option value="offers">Офферный</option>
-    <option value="redirect">Редирект</option>
+    <option value="offers">Offers</option>
+    <option value="redirect">Redirect</option>
   </select>
-  <input name="url" placeholder="URL (для редиректа)">
-  <input name="geo" placeholder="Гео" maxlength="2" value="{{ campaign.geo or '' }}">
-  <button class="btn primary" type="submit">Добавить</button>
+  <input name="url" placeholder="URL (for redirects)">
+  <input name="geo" placeholder="Geo" maxlength="2" value="{{ campaign.geo or '' }}">
+  <button class="btn primary" type="submit">Add</button>
 </form>
-<p class="hint">Гео-фильтр применяется к потоку-редиректу: трафик из указанной страны уходит на URL.
-Для офферного потока поля «URL» и «Гео» игнорируются — офферы добавляются в редакторе офферов.</p>
+<p class="hint">The geo filter applies to redirect streams: traffic from the given country goes to the URL.
+For offer streams the URL and Geo fields are ignored — offers are managed in the offer editor.</p>
 
 <div class="bottom-actions">
-  <a class="btn primary" href="/campaigns/{{ campaign.keitaro_id }}/offers">Перейти к офферам →</a>
+  <a class="btn primary" href="/campaigns/{{ campaign.keitaro_id }}/offers">Go to offers →</a>
 </div>
 </div>
