@@ -1,6 +1,48 @@
 <div id="campaign-body">
-{% if error %}<div class="flash flash-error">{{ error }}</div>{% endif %}
-{% if message %}<div class="flash flash-ok">{{ message }}</div>{% endif %}
+<div class="flash-slot">
+  {% if error %}<div class="flash flash-error">{{ error }}</div>{% endif %}
+  {% if message %}<div class="flash flash-ok">{{ message }}</div>{% endif %}
+</div>
+
+{% if kt_campaign and catalogs %}
+<section class="params-card">
+  <h2 class="section-label">Параметры кампании в Keitaro</h2>
+  <form class="params-form" hx-post="/campaigns/{{ campaign.keitaro_id }}/params"
+        hx-target="#campaign-body" hx-swap="outerHTML">
+    <label>Домен
+      <select name="domain_id">
+        {% if kt_campaign.domain_id and kt_campaign.domain_id not in (catalogs.domains | map(attribute='id') | list) %}
+        <option value="{{ kt_campaign.domain_id }}" selected>ID {{ kt_campaign.domain_id }}</option>
+        {% endif %}
+        {% for d in catalogs.domains %}
+        <option value="{{ d.id }}"{% if d.id == kt_campaign.domain_id %} selected{% endif %}>{{ d.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Группа
+      <select name="group_id">
+        {% if kt_campaign.group_id and kt_campaign.group_id not in (catalogs.groups | map(attribute='id') | list) %}
+        <option value="{{ kt_campaign.group_id }}" selected>ID {{ kt_campaign.group_id }}</option>
+        {% endif %}
+        {% for g in catalogs.groups %}
+        <option value="{{ g.id }}"{% if g.id == kt_campaign.group_id %} selected{% endif %}>{{ g.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Источник
+      <select name="traffic_source_id">
+        {% if kt_campaign.traffic_source_id and kt_campaign.traffic_source_id not in (catalogs.sources | map(attribute='id') | list) %}
+        <option value="{{ kt_campaign.traffic_source_id }}" selected>ID {{ kt_campaign.traffic_source_id }}</option>
+        {% endif %}
+        {% for s in catalogs.sources %}
+        <option value="{{ s.id }}"{% if s.id == kt_campaign.traffic_source_id %} selected{% endif %}>{{ s.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <button class="btn primary" type="submit">Сохранить</button>
+  </form>
+</section>
+{% endif %}
 
 {% if not campaign.streams %}
 <p class="muted">Потоков нет. Нажмите «Fetch Streams», чтобы подтянуть их из Keitaro, или добавьте новый ниже.</p>

@@ -57,6 +57,9 @@ class KeitaroClient:
     def create_campaign(self, **fields) -> dict:
         return self._request("POST", "/campaigns", json=fields)
 
+    def update_campaign(self, campaign_id: int, **fields) -> dict:
+        return self._request("PUT", f"/campaigns/{campaign_id}", json=fields)
+
     def delete_campaign(self, campaign_id: int) -> dict:
         return self._request("DELETE", f"/campaigns/{campaign_id}")
 

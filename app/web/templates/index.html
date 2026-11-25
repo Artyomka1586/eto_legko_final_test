@@ -1,7 +1,9 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Создание кампании</h1>
+<div class="flash-slot">
 {% if error %}<div class="flash flash-error">{{ error }}</div>{% endif %}
+</div>
 
 <form method="post" action="/campaigns" class="creator">
   <label>

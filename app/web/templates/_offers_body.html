@@ -1,6 +1,8 @@
 <div id="offers-body">
-{% if error %}<div class="flash flash-error">{{ error }}</div>{% endif %}
-{% if message %}<div class="flash flash-ok">{{ message }}</div>{% endif %}
+<div class="flash-slot">
+  {% if error %}<div class="flash flash-error">{{ error }}</div>{% endif %}
+  {% if message %}<div class="flash flash-ok">{{ message }}</div>{% endif %}
+</div>
 
 {% if not campaign.streams %}
 <p class="muted">Потоков нет. Вернитесь к управлению потоками, чтобы добавить их.</p>

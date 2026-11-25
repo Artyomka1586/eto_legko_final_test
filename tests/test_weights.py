@@ -6,7 +6,10 @@ from app.services import recalc_weights
 
 def make_stream(specs):
     """specs: список кортежей (share, pinned, status)."""
-    stream = Stream(id=1, campaign_id=1, keitaro_stream_id=1, name="s", position=1, has_offers=True)
+    stream = Stream(
+        id=1, campaign_id=1, keitaro_stream_id=1, name="s", position=1,
+        has_offers=True, dirty=False,
+    )
     stream.offers = [
         StreamOffer(
             id=i + 1,
@@ -72,3 +75,32 @@ def test_no_free_offers_changes_nothing():
     stream = make_stream([(50, True, "active"), (50, True, "active")])
     recalc_weights(stream)
     assert shares(stream) == [50, 50]
+
+
+class _Db:
+    """toggle_pin нужен только db.commit() — БД здесь не требуется."""
+
+    def commit(self):
+        pass
+
+
+def test_unpin_without_weight_change_keeps_stream_clean():
+    """34/33/33, пин 34 снят: пересчёт даёт те же веса — поток не «грязный»."""
+    stream = make_stream([(34, True, "active"), (33, False, "active"), (33, False, "active")])
+    from app.services import toggle_pin
+
+    toggle_pin(_Db(), stream.offers[0])
+    assert shares(stream) == [34, 33, 33]
+    assert stream.dirty is False
+
+
+def test_unpin_with_weight_change_marks_stream_dirty():
+    """34/22/22/22 (34 запинен): снятие пина пересчитывает всех поровну — «грязный»."""
+    stream = make_stream(
+        [(34, True, "active"), (22, False, "active"), (22, False, "active"), (22, False, "active")]
+    )
+    from app.services import toggle_pin
+
+    toggle_pin(_Db(), stream.offers[0])
+    assert shares(stream) == [25, 25, 25, 25]
+    assert stream.dirty is True

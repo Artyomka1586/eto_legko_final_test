@@ -81,6 +81,25 @@ input:focus, select:focus { outline: 2px solid #2f81c9; border-color: #2f81c9; }
 .flash-error { background: #2a1414; color: #ff8f8f; border: 1px solid #5c2a2a; }
 .flash-ok { background: #10291c; color: #6ee7a8; border: 1px solid #1e7a4f; }
 
+/* место под флэш зарезервировано всегда: появление сообщения не сдвигает интерфейс */
+.flash-slot { min-height: 40px; margin-bottom: 16px; }
+.flash-slot .flash { margin-bottom: 0; min-height: 40px; display: flex; align-items: center; }
+
+/* --- параметры кампании --- */
+
+.params-card {
+  background: #131c2b;
+  border: 1px solid #263450;
+  border-radius: 8px;
+  padding: 14px 16px 16px;
+  margin-bottom: 16px;
+}
+.params-card .section-label { margin: 0 0 10px; }
+.params-form { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+.params-form label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: #8296ad; }
+.params-form select { min-width: 160px; }
+
+
 /* --- редактор --- */
 
 .editor-head {

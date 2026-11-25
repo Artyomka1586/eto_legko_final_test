@@ -56,13 +56,38 @@ def _get_stream(db: Session, campaign: Campaign, stream_id: int) -> Stream:
     return stream
 
 
+def _campaign_ctx(
+    request: Request,
+    campaign: Campaign,
+    message: str | None = None,
+    error: str | None = None,
+) -> dict:
+    """Контекст страницы кампании: локальная запись + параметры кампании из Keitaro."""
+    try:
+        kt_campaign = get_client().get_campaign(campaign.keitaro_id)
+    except KeitaroError:
+        kt_campaign = None
+    try:
+        catalogs = services.campaign_catalogs()
+    except KeitaroError:
+        catalogs = None
+    return {
+        "request": request,
+        "campaign": campaign,
+        "message": message,
+        "error": error,
+        "kt_campaign": kt_campaign,
+        "catalogs": catalogs,
+    }
+
+
 def _campaign_response(request: Request, campaign: Campaign, message: str | None = None, error: str | None = None):
     """HTMX-запросам отдаём тело страницы кампании, обычным — редирект (PRG)."""
     if request.headers.get("HX-Request") == "true":
         return templates.TemplateResponse(
             request,
             "_campaign_body.html",
-            {"request": request, "campaign": campaign, "message": message, "error": error},
+            _campaign_ctx(request, campaign, message, error),
         )
     return RedirectResponse(f"/campaigns/{campaign.keitaro_id}", status_code=303)
 
@@ -124,9 +149,7 @@ def create_campaign(
 @router.get("/campaigns/{keitaro_id}")
 def campaign_page(request: Request, keitaro_id: int, db: Session = Depends(get_db)):
     campaign = _get_or_create_campaign(db, get_client(), keitaro_id)
-    return templates.TemplateResponse(
-        request, "campaign.html", {"request": request, "campaign": campaign}
-    )
+    return templates.TemplateResponse(request, "campaign.html", _campaign_ctx(request, campaign))
 
 
 @router.get("/campaigns/{keitaro_id}/offers")
@@ -201,6 +224,29 @@ def delete_stream(stream_id: int, request: Request, db: Session = Depends(get_db
     except KeitaroError as exc:
         return _campaign_response(request, campaign, error=f"Keitaro: {exc}")
     return _campaign_response(request, campaign, message=f"Поток «{name}» удалён из Keitaro")
+
+
+@router.post("/campaigns/{keitaro_id}/params")
+def save_campaign_params(
+    keitaro_id: int,
+    request: Request,
+    domain_id: int = Form(...),
+    group_id: int = Form(...),
+    traffic_source_id: int = Form(...),
+    db: Session = Depends(get_db),
+):
+    campaign = _get_or_create_campaign(db, get_client(), keitaro_id)
+    try:
+        get_client().update_campaign(
+            keitaro_id,
+            domain_id=domain_id,
+            group_id=group_id,
+            traffic_source_id=traffic_source_id,
+        )
+    except KeitaroError as exc:
+        return _campaign_response(request, campaign, error=f"Keitaro: {exc}")
+    return _campaign_response(request, campaign, message="Параметры кампании обновлены в Keitaro")
+
 
 
 # --- действия уровня потока (редактор офферов) ------------------------------

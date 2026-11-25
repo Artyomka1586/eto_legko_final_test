@@ -27,6 +27,17 @@ def offer_catalog() -> dict[int, str]:
     return {o["id"]: o["name"] for o in get_client().list_offers()}
 
 
+@lru_cache(maxsize=1)
+def campaign_catalogs() -> dict[str, list[dict]]:
+    """Справочники доменов/групп/источников — для выбора параметров кампании."""
+    kt = get_client()
+    return {
+        "domains": [{"id": d["id"], "name": d.get("name") or str(d["id"])} for d in kt.list_domains()],
+        "groups": [{"id": g["id"], "name": g.get("name") or str(g["id"])} for g in kt.list_groups()],
+        "sources": [{"id": s["id"], "name": s.get("name") or str(s["id"])} for s in kt.list_traffic_sources()],
+    }
+
+
 # --- пересчёт весов --------------------------------------------------------
 
 
@@ -305,9 +316,13 @@ def restore_offer(db: Session, offer: StreamOffer) -> None:
 def toggle_pin(db: Session, offer: StreamOffer) -> None:
     offer.pinned = not offer.pinned
     if not offer.pinned:
-        # снятие пина возвращает вес в общий пул — пересчитываем
-        offer.stream.dirty = True
+        # снятие пина возвращает вес в общий пул; поток помечаем изменённым,
+        # только если веса после пересчёта реально отличаются от опубликованных
+        before = {o.id: o.share for o in offer.stream.offers}
         recalc_weights(offer.stream)
+        after = {o.id: o.share for o in offer.stream.offers}
+        if before != after:
+            offer.stream.dirty = True
     db.commit()
 
 
