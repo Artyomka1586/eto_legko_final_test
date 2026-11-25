@@ -49,7 +49,8 @@ class StreamOffer(Base):
     """Оффер потока: локальный (staging) и опубликованный в Keitarо наборы значений.
 
     share/status — то, что видит пользователь (staging);
-    published_share — последний известный вес в Keitaro (None = оффера там сейчас нет).
+    published_share — последний известный вес в Keitaro (None = оффера там сейчас нет);
+    published_pinned — пин на момент последнего Push (пин — локальный, Keitaro его не хранит).
     """
 
     __tablename__ = "stream_offers"
@@ -62,6 +63,9 @@ class StreamOffer(Base):
     pinned: Mapped[bool] = mapped_column(Boolean, default=False)
     status: Mapped[str] = mapped_column(String(16), default="active")  # active | removed
     published_share: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # Пин на момент последнего Push: Cancel восстанавливает не только веса, но и пины.
+    # Пин живёт только в обёртке (Keitaro о нём не знает), поэтому храним снапшот локально.
+    published_pinned: Mapped[bool] = mapped_column(Boolean, default=False)
     # Был ли оффер когда-либо опубликован в Keitaro. False = добавлен локально и не пушнут:
     # такая запись при удалении/отмене исчезает полностью, а не уходит в серый архив.
     ever_published: Mapped[bool] = mapped_column(Boolean, default=False)

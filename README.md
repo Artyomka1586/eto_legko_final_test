@@ -131,6 +131,8 @@ alembic/           # миграции
 
 * `share`, `status`, `pinned` — то, что видит и меняет пользователь;
 * `published_share` — последний известный вес в Keitaro (`NULL` = оффера в Keitaro нет);
+* `published_pinned` — пин на момент последнего Push (пин — локальный маркер,
+  Keitaro о нём не знает, поэтому Cancel восстанавливает его из этого снапшота);
 * `ever_published` — был ли оффер когда-либо опубликован в Keitaro.
 
 Push отправляет активные офферы с весами в Keitaro (`PUT /streams/{id}`) и

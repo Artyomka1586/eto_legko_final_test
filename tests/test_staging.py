@@ -120,6 +120,31 @@ def test_cancel_restores_published_and_deletes_local(db):
     assert stream.dirty is False
 
 
+def test_cancel_restores_pin_made_before_push(db):
+    """Пин, сделанный до Push, выживает после remove + Cancel (пин — часть сохранённого)."""
+    _, stream = make_campaign_with_stream(db)
+    services.toggle_pin(db, stream.offers[0])
+    services.add_offer(db, stream, 18002)
+    services.push_stream(db, FakeKeitaro(), stream)  # опубликовано: 100 (пин) / 0
+    services.remove_offer(db, stream.offers[1])      # удаление без сохранения
+    services.cancel_stream_changes(db, stream)
+    assert stream.offers[0].pinned is True
+    assert stream.offers[0].share == 100
+    assert [offer.status for offer in stream.offers] == ["active", "active"]
+    assert [offer.share for offer in stream.offers] == [100, 0]
+
+
+def test_cancel_reverts_unpin_made_after_push(db):
+    """Анпин после Push — несохранённое изменение, Cancel возвращает пин на место."""
+    _, stream = make_campaign_with_stream(db)
+    services.toggle_pin(db, stream.offers[0])
+    services.add_offer(db, stream, 18002)
+    services.push_stream(db, FakeKeitaro(), stream)
+    services.toggle_pin(db, stream.offers[0])         # анпин без сохранения
+    services.cancel_stream_changes(db, stream)
+    assert stream.offers[0].pinned is True
+
+
 def test_push_publishes_active_offers(db):
     _, stream = make_campaign_with_stream(db)
     services.add_offer(db, stream, 18002)

@@ -260,6 +260,7 @@ def sync_campaign_streams(db: Session, kt: KeitaroClient, campaign: Campaign) ->
                     published_share=share,
                     status="active",
                     pinned=False,
+                    published_pinned=False,
                     ever_published=True,
                 )
             )
@@ -336,9 +337,11 @@ def push_stream(db: Session, kt: KeitaroClient, stream: Stream) -> None:
     for offer in stream.offers:
         if offer.status == "active":
             offer.published_share = offer.share
+            offer.published_pinned = offer.pinned
             offer.ever_published = True
         else:
             offer.published_share = None
+            offer.published_pinned = False
     stream.dirty = False
     db.commit()
 
@@ -349,7 +352,7 @@ def cancel_stream_changes(db: Session, stream: Stream) -> None:
         if offer.published_share is not None:
             offer.share = offer.published_share
             offer.status = "active"
-            offer.pinned = False
+            offer.pinned = offer.published_pinned
         elif offer.ever_published:
             # Был в Keitaro, но удалён там — остаётся серым архивом с bring back.
             offer.status = "removed"
