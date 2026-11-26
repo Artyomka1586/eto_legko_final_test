@@ -15,7 +15,7 @@ Jinja2 + [HTMX](https://htmx.org). Клиент Admin API Keitaro — `httpx`.
 * имя с префиксом `test_adulybin_` (префикс настраивается в `.env`);
 * домен, группа и источник берутся автоматически (первые доступные из API Keitaro);
 * поток **Google**: фильтр `country` на указанное гео + redirect на `https://www.google.com/`;
-* поток **Offers**: выбранный оффер со 100% весом.
+* поток **Offers1**: выбранный оффер со 100% весом.
 
 **2. Редактор кампании** (`/campaigns/{id}`)
 
@@ -49,10 +49,10 @@ Jinja2 + [HTMX](https://htmx.org). Клиент Admin API Keitaro — `httpx`.
 
 ## Запуск
 
-Нужен Python 3.11+.
+Нужен Python 3.11+ (проект разрабатывался и проверялся на 3.13).
 
 ```bash
-git clone <repo> && cd keitaro-wrapper
+git clone <repo> && cd eto_legko_final_test
 
 python -m venv .venv
 .venv\Scripts\activate          # Windows
@@ -63,7 +63,9 @@ cp .env.example .env            # и вписать в .env ключ API (см. 
 ```
 
 Ключ берётся в админке эмулятора Keitaro после входа через GitHub (плашка
-`Заголовок запроса: Api-Key: ...` вверху страницы) и кладётся в `.env`:
+`Заголовок запроса: Api-Key: ...` вверху страницы) и кладётся в `.env`.
+Ключ обязателен: без него приложение откажется стартовать с понятной ошибкой
+валидации (fail fast), а не упадёт загадочным 401 при первом же запросе:
 
 ```ini
 KEITARO_API_URL=https://keitaro-for-tests.etolegko.com/admin_api/v1
@@ -136,8 +138,8 @@ alembic/           # миграции
 * `ever_published` — был ли оффер когда-либо опубликован в Keitaro.
 
 Push отправляет активные офферы с весами в Keitaro (`PUT /streams/{id}`) и
-обновляет `published_share`. Cancel восстанавливает staging из `published_share`:
-локально добавленные и не пушнутые записи (`ever_published = false`) удаляются
-полностью, офферы, ранее опубликованные и удалённые, остаются в сером архиве
-с кнопкой bring back. Синхронизация (Fetch Streams) обновляет `published_share`
-и, если поток не «грязный», зеркалит staging.
+обновляет `published_share` и `published_pinned`. Cancel восстанавливает staging
+из снапшота: локально добавленные и не пушнутые записи (`ever_published = false`)
+удаляются полностью, офферы, ранее опубликованные и удалённые, остаются в сером
+архиве с кнопкой bring back. Синхронизация (Fetch Streams) обновляет
+`published_share` и, если поток не «грязный», зеркалит staging.
