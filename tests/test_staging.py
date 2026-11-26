@@ -227,7 +227,7 @@ def test_create_campaign_creates_two_streams(db):
 
 def test_create_campaign_compensates_on_failure(db):
     """Keitaro упал посреди создания — кампания откатывается, локально ничего не остаётся."""
-    fake = FakeKeitaro(fail_on_stream="Offers")
+    fake = FakeKeitaro(fail_on_stream=services.OFFERS_STREAM_NAME)
     with pytest.raises(KeitaroError):
         services.create_campaign(db, fake, "broken", "US", 18001)
     assert fake.deleted_campaigns == [500]

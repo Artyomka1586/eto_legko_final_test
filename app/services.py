@@ -16,7 +16,7 @@ from app.keitaro import KeitaroError, get_client
 from app.models import Campaign, Stream, StreamOffer
 
 GOOGLE_STREAM_NAME = "Google"
-OFFERS_STREAM_NAME = "Offers"
+OFFERS_STREAM_NAME = "Offers1"
 
 
 class KeitaroGateway(Protocol):

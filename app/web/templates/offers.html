@@ -9,7 +9,7 @@
       · <a href="/campaigns/{{ campaign.keitaro_id }}">manage streams</a></p>
   </div>
   <form hx-post="/campaigns/{{ campaign.keitaro_id }}/fetch?view=offers" hx-target="#offers-body" hx-swap="outerHTML">
-    <button class="btn" type="submit">Fetch Streams</button>
+    <button class="btn primary" type="submit">Fetch Streams</button>
   </form>
 </div>
 {% include "_offers_body.html" %}
