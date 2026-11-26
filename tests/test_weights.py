@@ -1,5 +1,7 @@
 """Юнит-тесты пересчёта весов: чистая логика, без БД и сети."""
 
+from sqlalchemy.orm import Session
+
 from app.models import Stream, StreamOffer
 from app.services import recalc_weights
 
@@ -82,19 +84,13 @@ def test_no_free_offers_changes_nothing():
     assert shares(stream) == [50, 50]
 
 
-class _Db:
-    """toggle_pin нужен только db.commit() — БД здесь не требуется."""
-
-    def commit(self):
-        pass
-
-
 def test_unpin_without_weight_change_keeps_stream_clean():
     """34/33/33, пин 34 снят: пересчёт даёт те же веса — поток не «грязный»."""
     stream = make_stream([(34, True, "active"), (33, False, "active"), (33, False, "active")])
     from app.services import toggle_pin
 
-    toggle_pin(_Db(), stream.offers[0])
+    # Session без движка: toggle_pin вызывает db.commit(), база здесь не нужна
+    toggle_pin(Session(), stream.offers[0])
     assert shares(stream) == [34, 33, 33]
     assert stream.dirty is False
 
@@ -106,6 +102,6 @@ def test_unpin_with_weight_change_marks_stream_dirty():
     )
     from app.services import toggle_pin
 
-    toggle_pin(_Db(), stream.offers[0])
+    toggle_pin(Session(), stream.offers[0])
     assert shares(stream) == [25, 25, 25, 25]
     assert stream.dirty is True
